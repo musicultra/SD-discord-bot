@@ -22,10 +22,11 @@ def step_image(inter, sample, step):
 
 def create_image(options, inter):
     options['step_increment'] = 5
+    # image, seed, first_seed=first_seed
 
     return t2i.prompt2image(
-        image_callback=lambda image, seed: send_image(inter, image, seed), 
-        step_callback=lambda sample, step: step_image(inter, sample, step),
+        image_callback=lambda image, seed, first_seed: send_image(inter, image, seed), 
+        step_callback=None,
         **options)
 
 async def dreams():

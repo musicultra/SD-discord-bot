@@ -1,0 +1,19 @@
+# This file describes the alternative machine learning models
+#  available to the dream script.
+#
+# To add a new model, follow the examples below. Each
+# model requires a model config file, a weights file,
+# and the width and height of the images it
+# was trained on.
+
+stable-diffusion-1.4:
+    config:  configs/stable-diffusion/v1-inference.yaml
+    weights: models/stable-diffusion-1.4.ckpt
+    width: 512
+    height: 512
+    
+waifu-diffusion-1.4:
+    config:  configs/stable-diffusion/v1-inference.yaml
+    weights: models/model-epoch04-full.ckpt
+    width: 512
+    height: 512
