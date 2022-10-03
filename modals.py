@@ -1,10 +1,13 @@
 import disnake
 from disnake.ext import commands
+from disnake.enums import ButtonStyle
 from disnake import TextInputStyle
 import shlex
 from commands import get_command_parser
 from dreams import input_queue
 import time
+import os
+from typing import Optional
 
 def parse(message):
     try:
@@ -14,7 +17,50 @@ def parse(message):
     except Exception as e:
         print(e)
         return None
+    
+def extract_from_embeds(embed):
+    options = parse("")
+    options = vars(options[0])
+    
+    for field in embed:
+        key = field.name.lower()
+        value = field.value
+        
+        if key in options:
+            if value != 'None':
+                if key == 'steps':
+                    options[key] = int(value)
+                elif key == 'width'or key == 'height':
+                    options[key] = min(int(value), 1024)
+                elif key == 'cfg_scale':
+                    options[key] = max(float(value), 1.1)
+                elif key == 'strength':
+                    options[key] = min(float(value), 0.99)
+                else:
+                    options[key] = value
+    options['seed'] = None
+    return options
+        
+    
+    
+# Defines a simple view of row buttons.
+class RowButtons(disnake.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
 
+    @disnake.ui.button(label="Re-roll", style=ButtonStyle.blurple)
+    async def first_button(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):        
+        await inter.response.send_message("Re-rolling.", ephemeral=True)
+        
+        options = extract_from_embeds(inter.message.embeds[0].fields)
+        view = RowButtons()
+
+        input_queue.put_nowait({"inter": inter, "opts": options, "embed": inter.message.embeds[0], "view": view})
+
+    @disnake.ui.button(label="Delete", style=ButtonStyle.red)
+    async def second_button(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
+        await inter.message.delete()
+    
 # Subclassing the modal.
 class InpaintingModal(disnake.ui.Modal):
     def __init__(self):
@@ -96,18 +142,18 @@ class InpaintingModal(disnake.ui.Modal):
                     except ValueError:
                         pass
                     
-
+        for key, value in options.items():
             embed.add_field(
                 name=key.capitalize(),
-                value=str(value)[:1024],
+                value=value,
                 inline=key != "prompt",
-            )
-            
+            ) 
+        view = RowButtons()
         # print(options)
-        await inter.response.send_message(embed=embed)
+        await inter.response.send_message("queued!")
         # await inter.response.defer()
         
-        input_queue.put_nowait({"inter": inter, "opts": options})
+        input_queue.put_nowait({"inter": inter, "opts": options, "embed": embed, "view": view})
 
 class ImageModal(disnake.ui.Modal):
     def __init__(self):
@@ -176,18 +222,18 @@ class ImageModal(disnake.ui.Modal):
                     except ValueError:
                         pass
                     
-
+        for key, value in options.items():
             embed.add_field(
                 name=key.capitalize(),
-                value=str(value)[:1024],
+                value=value,
                 inline=key != "prompt",
-            )
-            
+            ) 
+        view = RowButtons()
         # print(options)
-        await inter.response.send_message(embed=embed)
+        await inter.response.send_message("queued!")
         # await inter.response.defer()
         
-        input_queue.put_nowait({"inter": inter, "opts": options})
+        input_queue.put_nowait({"inter": inter, "opts": options, "embed": embed, "view": view})
 
 class PromptModal(disnake.ui.Modal):
     def __init__(self):
@@ -268,17 +314,18 @@ class PromptModal(disnake.ui.Modal):
                         pass
 
 
+        for key, value in options.items():
             embed.add_field(
                 name=key.capitalize(),
-                value=str(value)[:1024],
+                value=value,
                 inline=key != "prompt",
-            )
-            
+            ) 
+        view = RowButtons()
         # print(options)
-        await inter.response.send_message(embed=embed)
+        await inter.response.send_message("queued!")
         # await inter.response.defer()
         
-        input_queue.put_nowait({"inter": inter, "opts": options})
+        input_queue.put_nowait({"inter": inter, "opts": options, "embed": embed, "view": view})
         
         # time.sleep(3)
         

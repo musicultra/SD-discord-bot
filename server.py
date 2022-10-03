@@ -20,7 +20,7 @@ output = None
 from dreams import dreams, input_queue
 
 from commands import get_command_parser
-from modals import PromptModal, ImageModal, InpaintingModal    
+from modals import PromptModal, ImageModal, InpaintingModal, RowButtons   
 
 def parse(message):
     try:
@@ -31,7 +31,7 @@ def parse(message):
         print(e)
         return None
 
-bot = commands.InteractionBot(test_guilds=[<your test server ID>])
+bot = commands.InteractionBot(test_guilds=[<guild ids>])
 
 
 
@@ -39,10 +39,10 @@ scheduler = AsyncIOScheduler()
 scheduler.add_job(dreams, 'interval', seconds=10)
 scheduler.start()
 
-@bot.event
-async def on_reaction_add(reaction, user) -> None:
-    print(reaction.emoji, user)
-    print(reaction.message)
+# @bot.event
+# async def on_button_click(reaction, user) -> None:
+#     print(reaction.emoji, user)
+#     print(reaction.message)
 
 @bot.slash_command(description="Sanity test for prompts")
 async def test_prompt(inter, message: str):
@@ -56,10 +56,8 @@ async def test_prompt(inter, message: str):
             inline=key != "prompt",
         )
     # print(inter.message)
-    await inter.response.send_message(embed=embed)
-    message = await inter.original_message()
-    await message.add_reaction('🔄')
-    await message.add_reaction('❌')
+    view = RowButtons()
+    await inter.response.send_message(view=view, embed=embed)
     # print(options)
     # await inter.response.send_message(json.dumps(vars(options[0])))
 
@@ -80,9 +78,20 @@ async def generate(inter: disnake.AppCmdInter, message: str):
         if isinstance(options["prompt"], list):
             options["prompt"] = " ".join(options["prompt"])
     
+    embed = disnake.Embed(title="Prompt Settings")
+    for key, value in options.items():
+        embed.add_field(
+            name=key.capitalize(),
+            value=value,
+            inline=key != "prompt",
+        )
+    view = RowButtons()
     await inter.response.send_message("queued!")
+    # await inter.response.defer()
+
+    input_queue.put_nowait({"inter": inter, "opts": options, "embed": embed, "view": view})
     
-    input_queue.put_nowait({"text": f"Pong! Latency is {bot.latency}", "inter": inter, "opts": options})
+    # input_queue.put_nowait({"text": f"Pong! Latency is {bot.latency}", "inter": inter, "opts": options})
 
 @bot.slash_command(description="Run Prompt in Stable Diffusion")
 async def inpainting(inter: disnake.AppCmdInter):

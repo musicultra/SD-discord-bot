@@ -29,6 +29,18 @@ def create_image(options, inter):
         step_callback=None,
         **options)
 
+# def generate_embed(options):
+#     for key, value in options.items():
+        
+#         embed.add_field(
+#             name=key.capitalize(),
+#             value=value,
+#             inline=key != "prompt",
+#         )
+#     # print(inter.message)
+#     view = RowButtons()
+#     await inter.response.send_message(view=view, embed=embed)
+
 async def dreams():
     try:
         # print("trying to enter the queue before another job finished")
@@ -41,6 +53,8 @@ async def dreams():
                 continue
                 
             options = prompt["opts"]
+            embed = prompt["embed"]
+            view = prompt["view"]
             
             
             if options["init_img"] != None:
@@ -90,13 +104,17 @@ async def dreams():
                 os.remove("./temp_mask_image.png")
             except Exception as e:
                 pass
-            
+            print(result)
             image = result[0][0]
+            seed = result[0][1]
             arr = io.BytesIO()
             image.save(arr, format='PNG')
             arr.seek(0)
             file = disnake.File(fp=arr, filename='test.png')
             
-            await inter.followup.send(file=file)
+            embed.set_field_at(index=6, name="seed", value=seed)
+            embed.set_image(file=file)
+            
+            await inter.followup.send(view=view, embed=embed)
     except queue.Empty:
         pass
