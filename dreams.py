@@ -1,6 +1,7 @@
 import disnake
 import queue
-from models import t2i
+# from models import t2i
+from diffusers import generate_prompt
 import io
 from io import BytesIO, StringIO
 from PIL import Image, ImageOps
@@ -24,22 +25,12 @@ def create_image(options, inter):
     options['step_increment'] = 5
     # image, seed, first_seed=first_seed
 
-    return t2i.prompt2image(
-        image_callback=lambda image, seed, first_seed: send_image(inter, image, seed), 
-        step_callback=None,
-        **options)
+    return generate_prompt(options)
 
-# def generate_embed(options):
-#     for key, value in options.items():
-        
-#         embed.add_field(
-#             name=key.capitalize(),
-#             value=value,
-#             inline=key != "prompt",
-#         )
-#     # print(inter.message)
-#     view = RowButtons()
-#     await inter.response.send_message(view=view, embed=embed)
+    # return t2i.prompt2image(
+    #     image_callback=lambda image, seed, first_seed: send_image(inter, image, seed), 
+    #     step_callback=None,
+    #     **options)
 
 async def dreams():
     try:
