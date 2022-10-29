@@ -1,10 +1,15 @@
 from server import bot, scheduler
 import asyncio
 
-bot = <token>
+bot = "<token>"
 async def run():
     try:
         await bot.start(bot)
     except KeyboardInterrupt:
         await bot.close()
-await asyncio.create_task(run())
+
+loop = asyncio.get_event_loop()
+task = loop.create_task(run())
+
+loop.run_until_complete(asyncio.wait([task]))
+loop.close()

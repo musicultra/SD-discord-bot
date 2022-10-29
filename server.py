@@ -31,18 +31,13 @@ def parse(message):
         print(e)
         return None
 
-bot = commands.InteractionBot(test_guilds=[<guild ids>])
+bot = commands.InteractionBot(test_guilds=[])
 
 
 
-scheduler = AsyncIOScheduler()
+scheduler = AsyncIOScheduler(job_defaults={'max_instances': 3})
 scheduler.add_job(dreams, 'interval', seconds=10)
 scheduler.start()
-
-# @bot.event
-# async def on_button_click(reaction, user) -> None:
-#     print(reaction.emoji, user)
-#     print(reaction.message)
 
 @bot.slash_command(description="Sanity test for prompts")
 async def test_prompt(inter, message: str):
@@ -55,19 +50,8 @@ async def test_prompt(inter, message: str):
             value=value,
             inline=key != "prompt",
         )
-    # print(inter.message)
     view = RowButtons()
-    await inter.response.send_message(view=view, embed=embed)
-    # print(options)
-    # await inter.response.send_message(json.dumps(vars(options[0])))
-
-# @bot.slash_command(description="Run Prompt in Stable Diffusion") # this decorator makes a slash command
-# async def generate(inter, message: str): # a slash command will be created with the name "ping"
-#     options = parse(message)
-    
-#     await inter.response.defer()
-
-#     input_queue.put_nowait({"text": f"Pong! Latency is {bot.latency}", "inter": inter, "opts": options})
+    await inter.response.send_message(view=view, embed=embed, ephemeral=True)
 
 @bot.slash_command(description="Power user prompt command")
 async def generate(inter: disnake.AppCmdInter, message: str):
@@ -86,22 +70,22 @@ async def generate(inter: disnake.AppCmdInter, message: str):
             inline=key != "prompt",
         )
     view = RowButtons()
-    await inter.response.send_message("queued!")
+    await inter.response.send_message("queued!", ephemeral=True)
     # await inter.response.defer()
 
     input_queue.put_nowait({"inter": inter, "opts": options, "embed": embed, "view": view})
     
     # input_queue.put_nowait({"text": f"Pong! Latency is {bot.latency}", "inter": inter, "opts": options})
 
-@bot.slash_command(description="Run Prompt in Stable Diffusion")
-async def inpainting(inter: disnake.AppCmdInter):
-    """Sends a Modal to create a tag."""
-    await inter.response.send_modal(modal=InpaintingModal())    
+# @bot.slash_command(description="Run Prompt in Stable Diffusion")
+# async def inpainting(inter: disnake.AppCmdInter):
+#     """Sends a Modal to create a tag."""
+#     await inter.response.send_modal(modal=InpaintingModal())    
 
-@bot.slash_command(description="Run Prompt in Stable Diffusion")
-async def image2image(inter: disnake.AppCmdInter):
-    """Sends a Modal to create a tag."""
-    await inter.response.send_modal(modal=ImageModal())
+# @bot.slash_command(description="Run Prompt in Stable Diffusion")
+# async def image2image(inter: disnake.AppCmdInter):
+#     """Sends a Modal to create a tag."""
+#     await inter.response.send_modal(modal=ImageModal())
     
 @bot.slash_command(description="Run Prompt in Stable Diffusion")
 async def prompts(inter: disnake.AppCmdInter):

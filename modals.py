@@ -41,13 +41,28 @@ def extract_from_embeds(embed):
     options['seed'] = None
     return options
         
+class VisibleRowButtons(disnake.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
     
+#     @disnake.ui.button(label="Re-roll", style=ButtonStyle.blurple)
+#     async def first_button(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):        
+#         await inter.response.send_message("Re-rolling.", ephemeral=True)
+        
+#         options = extract_from_embeds(inter.message.embeds[0].fields)
+#         view = RowButtons()
+
+#         input_queue.put_nowait({"inter": inter, "opts": options, "embed": inter.message.embeds[0], "view": view})
+        
+    @disnake.ui.button(label="Delete", style=ButtonStyle.red)
+    async def third_button(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
+        await inter.message.delete()
     
 # Defines a simple view of row buttons.
 class RowButtons(disnake.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
-
+    
     @disnake.ui.button(label="Re-roll", style=ButtonStyle.blurple)
     async def first_button(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):        
         await inter.response.send_message("Re-rolling.", ephemeral=True)
@@ -56,10 +71,16 @@ class RowButtons(disnake.ui.View):
         view = RowButtons()
 
         input_queue.put_nowait({"inter": inter, "opts": options, "embed": inter.message.embeds[0], "view": view})
+        
+    @disnake.ui.button(label="Share", style=ButtonStyle.green)
+    async def second_button(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
+        view = VisibleRowButtons()
+        await inter.response.send_message(view=view, embed=inter.message.embeds[0])
+        
 
     @disnake.ui.button(label="Delete", style=ButtonStyle.red)
-    async def second_button(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
-        await inter.message.delete()
+    async def third_button(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
+        await inter.response.edit_message("deleted", embed=None, attachments=None, view=None)
     
 # Subclassing the modal.
 class InpaintingModal(disnake.ui.Modal):
@@ -150,7 +171,7 @@ class InpaintingModal(disnake.ui.Modal):
             ) 
         view = RowButtons()
         # print(options)
-        await inter.response.send_message("queued!")
+        await inter.response.send_message("queued!", ephemeral=True)
         # await inter.response.defer()
         
         input_queue.put_nowait({"inter": inter, "opts": options, "embed": embed, "view": view})
@@ -230,7 +251,7 @@ class ImageModal(disnake.ui.Modal):
             ) 
         view = RowButtons()
         # print(options)
-        await inter.response.send_message("queued!")
+        await inter.response.send_message("queued!", ephemeral=True)
         # await inter.response.defer()
         
         input_queue.put_nowait({"inter": inter, "opts": options, "embed": embed, "view": view})
@@ -238,13 +259,13 @@ class ImageModal(disnake.ui.Modal):
 class PromptModal(disnake.ui.Modal):
     def __init__(self):
         # The details of the modal, and its components
-        components = [
+        components = [ # not exposing strength for now
             disnake.ui.TextInput(
-                label="Strength (between 0 and 1)",
-                placeholder="0.75",
-                custom_id="strength",
+                label="Steps - Max 50",
+                placeholder="20",
+                custom_id="steps",
                 style=TextInputStyle.short,
-                max_length=10,
+                max_length=3,
                 required=False
             ),
             disnake.ui.TextInput(
@@ -255,21 +276,23 @@ class PromptModal(disnake.ui.Modal):
                 max_length=10,
                 required=False
             ),
-            disnake.ui.TextInput(
-                label="Width (multiple of 64) - Max 1024",
-                placeholder="512",
-                custom_id="width",
-                style=TextInputStyle.short,
-                max_length=10,
-                required=False
-            ),
-            disnake.ui.TextInput(
-                label="Height (multiple of 64) - Max 1024",
-                placeholder="512",
-                custom_id="height",
-                style=TextInputStyle.short,
-                max_length=10,
-                required=False
+            disnake.ui.Select(
+                options=[
+                    disnake.SelectOption(
+                        label="Euler",
+                        value="Euler"
+                    ),
+                    disnake.SelectOption(
+                        label="Euler a",
+                        value="Euler a"
+                    ),
+                    disnake.SelectOption(
+                        label="DDIM",
+                        value="DDIM"
+                    ),
+                ],
+                placeholder="Euler",
+                custom_id="sampler_index",
             ),
             disnake.ui.TextInput(
                 label="Prompt",
@@ -287,12 +310,10 @@ class PromptModal(disnake.ui.Modal):
 
     # The callback received when the user input is completed.
     async def callback(self, inter: disnake.ModalInteraction):
-        # await inter.response.defer()
-        # (Namespace(cfg_scale=7.5, height=512, init_img=None, init_mask=None, prompt=[], sampler_name='k_euler_a', steps=None, strength=0.75, upscale=None, width=512),
         embed = disnake.Embed(title="Prompt Creation")
         options = parse("")
         options = vars(options[0])
-        # print(inter.text_values)
+        
         for key, value in inter.text_values.items():
             if value == "":
                 value = "Unknown" if key not in options else str(options[key])
@@ -321,14 +342,9 @@ class PromptModal(disnake.ui.Modal):
                 inline=key != "prompt",
             ) 
         view = RowButtons()
-        # print(options)
-        await inter.response.send_message("queued!")
-        # await inter.response.defer()
+        print(options)
+        await inter.response.send_message("queued!", ephemeral=True)
         
         input_queue.put_nowait({"inter": inter, "opts": options, "embed": embed, "view": view})
-        
-        # time.sleep(3)
-        
-        # await inter.followup.send("GONE")
         
         
