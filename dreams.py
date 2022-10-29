@@ -9,8 +9,8 @@ import json
 import re
 
 server_ = {
-    "model_1": "http://127.0.0.1:7860",
-    "model_2": "http://127.0.0.1:7860"
+    "<channel_id>": "http://127.0.0.1:7860",
+    "<channel_id>": "http://127.0.0.1:7860"
 }
 input_queue = queue.Queue(maxsize=100)
 queue_limit = 100
@@ -33,8 +33,6 @@ def create_image(options, inter):
                      
     options["prompt"] = positive
     options["negative_prompt"] = negative
-    options["server_"] = server_[options["model"]]
-    if "model" in options: del options["model"]
 
     return txt2img(**(options))
 
@@ -51,6 +49,12 @@ async def dreams():
             options = prompt["opts"]
             embed = prompt["embed"]
             view = prompt["view"]
+
+            # WE USE CHANNEL ID TO SELECT MODEL
+            if inter.channel_id not in server_:
+                await inter.followup.send("Error - unknown channel")
+            
+            options["server_"] = server_[inter.channel_id]
 
             image, parameters = create_image(options, inter)
 
