@@ -273,25 +273,14 @@ class PromptModal(disnake.ui.Modal):
                 placeholder="7.5",
                 custom_id="cfg_scale",
                 style=TextInputStyle.short,
-                max_length=10,
+                max_length=5,
                 required=False
             ),
-            disnake.ui.Select(
-                options=[
-                    disnake.SelectOption(
-                        label="Euler",
-                        value="Euler"
-                    ),
-                    disnake.SelectOption(
-                        label="Euler a",
-                        value="Euler a"
-                    ),
-                    disnake.SelectOption(
-                        label="DDIM",
-                        value="DDIM"
-                    ),
-                ],
+            disnake.ui.TextInput(
+                label="Select one sampler",
+                default="Euler|Euler a|DDIM",
                 placeholder="Euler",
+                style=TextInputStyle.short,
                 custom_id="sampler_index",
             ),
             disnake.ui.TextInput(

@@ -1,6 +1,6 @@
 import disnake
 import queue
-from auto_models import txt2img
+from models import txt2img
 import io
 from io import BytesIO, StringIO
 from PIL import Image, ImageOps
