@@ -278,7 +278,7 @@ class PromptModal(disnake.ui.Modal):
             ),
             disnake.ui.TextInput(
                 label="Select one sampler",
-                default="Euler|Euler a|DDIM",
+                value="Euler|Euler a|DDIM",
                 placeholder="Euler",
                 style=TextInputStyle.short,
                 custom_id="sampler_index",
@@ -309,6 +309,11 @@ class PromptModal(disnake.ui.Modal):
             else:
                 if key == "prompt":
                     options[key] = value
+                if key == "sampler_index":
+                    if value not in ["Euler", "Euler a", "DDIM"]:
+                        options[key] = "Euler"
+                    else:
+                        options[key] = value
                 elif key == "width" or key == "height":
                     try:
                         options[key] = min(int(value), 1024)
